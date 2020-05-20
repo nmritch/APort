@@ -1,0 +1,136 @@
+import os
+import tkinter as tk
+from tkinter import ttk
+from tkinter import *
+import matplotlib.pyplot as plt
+import xlrd
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+from numpy import arange, sin, pi
+
+LARGE_FONT = ("Verdana", 12)
+
+
+class Accessport(tk.Tk):
+    def __init__(self, *args, **kwargs):
+        tk.Tk.__init__(self, *args, **kwargs)
+
+        tk.Tk.wm_title(self, "Accessport Data")
+
+        container = tk.Frame(self)
+        container.pack(side="top", fill="both", expand=True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+
+        self.frames = {}
+
+        for F in (HomePage, PageMPH, PageRPM, PageHPFP, PageBoost):
+           frame = F(container, self)
+
+            self.frames[F] = frame
+
+            frame.grid(row=0, column=0, sticky="nsew")
+
+        self.show_frame(HomePage)
+
+    def show_frame(self, cont):
+        frame = self.frames[cont]
+        frame.tkraise()
+
+
+class HomePage(tk.Frame):
+    def __init__(self, parent, controller):
+        self.controller = controller
+        tk.Frame.__init__(self, parent, bg="grey")
+        label = tk.Label(self, text="Data log home page", font=LARGE_FONT, fg="black", bg="grey")
+        label.pack(padx=5, pady=5)
+
+        button = ttk.Button(self, text="MPH", width=60, command=self.mph_event)
+        button.pack(padx=40, pady=10)
+
+        button = ttk.Button(self, text="RPM", width=60, command=self.mph_event)
+        button.pack(padx=40, pady=10)
+
+        button = ttk.Button(self, text="HPFP", width=60, command=self.mph_event)
+        button.pack(padx=40, pady=10)
+
+        button = ttk.Button(self, text="Boost PSI", width=60, command=self.mph_event)
+        button.pack(padx=40, pady=10)
+
+    def mph_event(self):
+        self.controller.show_frame(PageMPH)
+
+    def plot_mph(self):
+        xls = os.path.join(r'C:\Users\s273396\Desktop', 'test_values.xlsx')
+        book = xlrd.open_workbook(xls)
+        sheet = book.sheet_by_index(0)
+
+        cells = []
+        for i in range(sheet.nrows):
+            cells.append(sheet.row_values(rowx=0, start_colx=0, end_colx=None))
+
+        plt.plot(cells)
+        plt.ylabel('MPH')
+        plt.xlabel('time')
+        plt.title('MPH')
+        plt.show()
+
+
+class PageMPH(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = tk.Label(self, text="Data log: MPH", font=LARGE_FONT)
+        label.pack(pady=10, padx=10)
+
+        self.plot()
+        button = ttk.Button(self, text="Back to home",
+                            command=lambda: controller.show_frame(HomePage))
+        button.pack()
+
+    def plot(self):
+        f = Figure(figsize=(1, 1), dpi=50)
+        a = f.add_subplot(111)
+        t = arange(0.0, 3.0, 0.01)
+        s = sin(2 * pi * t)
+
+        a.plot(t, s)
+
+        canvas = FigureCanvasTkAgg(f, master=self)
+        canvas.show()
+        canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=1)
+
+
+class PageRPM(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = tk.Label(self, text="Data log: RPM", font=LARGE_FONT)
+        label.pack(pady=10, padx=10)
+
+        button = ttk.Button(self, text="Back to home",
+                            command=lambda: controller.show_frame(HomePage))
+        button.pack()
+
+
+class PageHPFP(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = tk.Label(self, text="Data log: Fuel Pressure", font=LARGE_FONT)
+        label.pack(pady=10, padx=10)
+
+        button = ttk.Button(self, text="Back to home",
+                            command=lambda: controller.show_frame(HomePage))
+        button.pack()
+
+
+class PageBoost(tk.Frame):
+    def __init__(self, parent, controller):
+        tk.Frame.__init__(self, parent)
+        label = tk.Label(self, text="Data log: Boost PSI", font=LARGE_FONT)
+        label.pack(pady=10, padx=10)
+
+        button = ttk.Button(self, text="Back to home",
+                            command=lambda: controller.show_frame(HomePage))
+        button.pack()
+
+app = Accessport()
+app.mainloop()
